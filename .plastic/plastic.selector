@@ -1,0 +1,4 @@
+repository "GooseGoose 2026-10-24_09-56-57/GooseGoose@18967572093534@cloud"
+  path "/"
+    br "/main"
+    co "/main"
