@@ -70,9 +70,10 @@ public static class MapScoring
     }
 
     /// <summary>
-    /// Score a map that already has walls applied. Verifies horse is trapped.
-    /// If solutionWalls is provided, budget is checked against that list only
-    /// (editor-painted terrain walls do not consume the player budget).
+    /// Score only the horse's reachable pen when trapped (enclose.horse).
+    /// Dead pockets with no path from the horse never count — even if sealed by water/walls.
+    /// If <paramref name="solutionWalls"/> is set, they are applied onto a clone first
+    /// (callers may pass a bare terrain map).
     /// </summary>
     public static MapScoreBreakdown Recalculate(MapData map, int wallBudget, Vector2Int[] solutionWalls = null)
     {
@@ -91,10 +92,13 @@ public static class MapScoring
         }
 
         List<Vector2Int> walls = new List<Vector2Int>();
+        MapData scored = map;
         if (solutionWalls != null)
         {
             for (int i = 0; i < solutionWalls.Length; i++)
                 walls.Add(solutionWalls[i]);
+            // Always score on a map that actually has these walls.
+            scored = ApplyWalls(map.Clone(), solutionWalls);
         }
         else
         {
@@ -115,13 +119,14 @@ public static class MapScoring
             return result;
         }
 
-        if (MapPathfinder.CanEscape(map))
+        if (MapPathfinder.CanEscape(scored))
         {
             result.message = "Horse can still escape — not a valid enclosure.";
             return result;
         }
 
-        bool[] mask = BuildPenMask(map);
+        // Pen = BFS from horse only (not "all cells that cannot reach the edge").
+        bool[] mask = BuildPenMask(scored);
         result.enclosedMask = mask;
 
         int enclosed = 0;
@@ -129,7 +134,7 @@ public static class MapScoring
         int bonusB = 0;
         int bees = 0;
         int total = 0;
-        int horseIdx = map.Index(map.horse.x, map.horse.y);
+        int horseIdx = scored.Index(scored.horse.x, scored.horse.y);
 
         for (int i = 0; i < mask.Length; i++)
         {
@@ -137,7 +142,7 @@ public static class MapScoring
                 continue;
 
             bool isHorse = i == horseIdx;
-            CellType t = isHorse ? CellType.Horse : map.cells[i];
+            CellType t = isHorse ? CellType.Horse : scored.cells[i];
             if (!CountsAsEnclosedCell(t) && t != CellType.Horse)
                 continue;
 
@@ -186,11 +191,15 @@ public static class MapScoring
         return copy;
     }
 
+    /// <summary>
+    /// Cells the horse can walk to (4-dir + portals). Wall/water block.
+    /// This is the only set that may receive score points.
+    /// </summary>
     public static bool[] BuildPenMask(MapData map)
     {
         int n = map.width * map.height;
         bool[] mask = new bool[n];
-        if (!map.InBounds(map.horse))
+        if (!map.InBounds(map.horse) || !map.IsPassable(map.Get(map.horse)))
             return mask;
 
         bool[] visited = new bool[n];
@@ -202,7 +211,11 @@ public static class MapScoring
         while (q.Count > 0)
         {
             Vector2Int cur = q.Dequeue();
-            mask[map.Index(cur.x, cur.y)] = true;
+            int curIdx = map.Index(cur.x, cur.y);
+            // Never score/mark standing on a wall (defensive).
+            if (!map.IsPassable(map.Get(cur)) && cur != map.horse)
+                continue;
+            mask[curIdx] = true;
 
             if (map.TryGetPortalExit(cur, out Vector2Int exit)
                 && map.InBounds(exit)

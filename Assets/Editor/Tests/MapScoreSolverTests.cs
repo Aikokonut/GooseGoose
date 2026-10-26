@@ -169,6 +169,45 @@ public class MapScoreSolverTests
     }
 
     [Test]
+    public void DeadPocketWithoutHorse_DoesNotAddScore()
+    {
+        // Two chambers separated by water. Horse sealed in the left; cherry sits in the right.
+        // Right pocket must not contribute to score.
+        // Layout 7x5 (edge is border):
+        MapData map = CreateBlank(7, 5);
+        for (int x = 0; x < 7; x++)
+        {
+            map.Set(x, 0, CellType.Water);
+            map.Set(x, 4, CellType.Water);
+        }
+        for (int y = 0; y < 5; y++)
+        {
+            map.Set(0, y, CellType.Water);
+            map.Set(6, y, CellType.Water);
+            map.Set(3, y, CellType.Water); // vertical separator
+        }
+        // Open interior left: (1,1)(1,2)(1,3)(2,1)(2,2)(2,3)
+        // Open interior right: (4,1)(4,2)(4,3)(5,1)(5,2)(5,3)
+        map.horse = new Vector2Int(1, 2);
+        map.Set(map.horse, CellType.Horse);
+        map.Set(5, 2, CellType.BonusA);
+
+        // Seal left chamber from any accidental edge gap — water already wraps.
+        Assert.IsFalse(MapPathfinder.CanEscape(map), "Horse should already be water-sealed");
+
+        MapScoreBreakdown score = MapScoring.Recalculate(map, 0);
+        Assert.IsTrue(score.valid, score.message);
+        Assert.AreEqual(0, score.bonusACount, "Cherry in horse-less pocket must not score");
+        // Left interior: 6 grass/horse cells → score 6
+        Assert.AreEqual(6, score.enclosedCellCount);
+        Assert.AreEqual(6, score.totalScore);
+
+        bool[] mask = score.enclosedMask;
+        Assert.IsFalse(mask[map.Index(5, 2)], "Cherry cell must not be in pen mask");
+        Assert.IsTrue(mask[map.Index(1, 2)], "Horse cell must be in pen mask");
+    }
+
+    [Test]
     public void Water_BlocksMovementAndWalls()
     {
         MapData map = CreateBlank(5, 5);

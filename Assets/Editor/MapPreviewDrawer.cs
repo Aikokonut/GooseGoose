@@ -106,9 +106,14 @@ public static class MapPreviewDrawer
             }
         }
 
-        if (showSolution && solution != null && solution.found && solution.breakdown.enclosedMask != null)
+        if (showSolution && solution != null && solution.found)
         {
-            bool[] mask = solution.breakdown.enclosedMask;
+            // Always derive pen from horse BFS on map+solution walls (never trust a stale mask /
+            // never tint pockets the horse cannot reach).
+            MapData scored = solution.walls != null
+                ? MapScoring.ApplyWalls(map.Clone(), solution.walls)
+                : map;
+            bool[] mask = MapScoring.BuildPenMask(scored);
             for (int i = 0; i < mask.Length && i < map.cells.Length; i++)
             {
                 if (!mask[i])
@@ -116,7 +121,7 @@ public static class MapPreviewDrawer
                 int x = i % map.width;
                 int y = i / map.width;
                 Rect r = new Rect(mapRect.x + x * cell, mapRect.y + y * cell, cell - 1f, cell - 1f);
-                CellType t = map.Get(x, y);
+                CellType t = scored.Get(x, y);
                 if (t == CellType.BonusA || t == CellType.BonusB)
                     EditorGUI.DrawRect(r, BonusHighlight);
                 else if (t == CellType.Bee)
