@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "dgSpecHash": "koxclLk/Euo=",
+  "success": true,
+  "projectFilePath": "D:\\Project\\GooseGoose\\Tools\\EncloseSatSolver\\EncloseSatSolver\\EncloseSatSolver.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Admin\\AppData\\Local\\Temp\\cursor-sandbox-cache\\055e5c5ce255e056cea974da3194cef9\\nuget\\google.ortools\\9.14.6206\\google.ortools.9.14.6206.nupkg.sha512",
+    "C:\\Users\\Admin\\AppData\\Local\\Temp\\cursor-sandbox-cache\\055e5c5ce255e056cea974da3194cef9\\nuget\\google.ortools.runtime.linux-arm64\\9.14.6206\\google.ortools.runtime.linux-arm64.9.14.6206.nupkg.sha512",
+    "C:\\Users\\Admin\\AppData\\Local\\Temp\\cursor-sandbox-cache\\055e5c5ce255e056cea974da3194cef9\\nuget\\google.ortools.runtime.linux-x64\\9.14.6206\\google.ortools.runtime.linux-x64.9.14.6206.nupkg.sha512",
+    "C:\\Users\\Admin\\AppData\\Local\\Temp\\cursor-sandbox-cache\\055e5c5ce255e056cea974da3194cef9\\nuget\\google.ortools.runtime.osx-arm64\\9.14.6206\\google.ortools.runtime.osx-arm64.9.14.6206.nupkg.sha512",
+    "C:\\Users\\Admin\\AppData\\Local\\Temp\\cursor-sandbox-cache\\055e5c5ce255e056cea974da3194cef9\\nuget\\google.ortools.runtime.osx-x64\\9.14.6206\\google.ortools.runtime.osx-x64.9.14.6206.nupkg.sha512",
+    "C:\\Users\\Admin\\AppData\\Local\\Temp\\cursor-sandbox-cache\\055e5c5ce255e056cea974da3194cef9\\nuget\\google.ortools.runtime.win-x64\\9.14.6206\\google.ortools.runtime.win-x64.9.14.6206.nupkg.sha512",
+    "C:\\Users\\Admin\\AppData\\Local\\Temp\\cursor-sandbox-cache\\055e5c5ce255e056cea974da3194cef9\\nuget\\google.protobuf\\3.31.1\\google.protobuf.3.31.1.nupkg.sha512"
+  ],
+  "logs": []
+}

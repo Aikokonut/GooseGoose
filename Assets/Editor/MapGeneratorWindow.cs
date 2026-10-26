@@ -80,7 +80,7 @@ public class MapGeneratorWindow : EditorWindow
         _settings.bonusCount = EditorGUILayout.IntSlider("Bonuses", _settings.bonusCount, 0, 8);
         _settings.portalPairs = EditorGUILayout.IntSlider("Portal Pairs", _settings.portalPairs, 0, 4);
         EditorGUILayout.HelpBox(
-            "Paint tools edit the current map in place. Score: +1/enclosed cell, BonusA +5, BonusB +10, Bee -3. Generate only keeps playable enclosure cuts.",
+            "Paint tools edit the current map in place. Score: +1/enclosed cell, cherry +3, apple +10, bee −5 (enclose.horse). Generate only keeps playable enclosure cuts.",
             MessageType.None);
     }
 
@@ -171,8 +171,8 @@ public class MapGeneratorWindow : EditorWindow
         MapScoreBreakdown b = _solution.breakdown;
         EditorGUILayout.LabelField("Maximum total score", b.totalScore.ToString());
         EditorGUILayout.LabelField("Enclosed score cells", b.enclosedCellCount.ToString());
-        EditorGUILayout.LabelField("BonusA (cherry)", b.bonusACount + " × " + MapScoring.BonusAExtra + " = " + b.bonusAScore);
-        EditorGUILayout.LabelField("BonusB (apple)", b.bonusBCount + " × " + MapScoring.BonusBExtra + " = " + b.bonusBScore);
+        EditorGUILayout.LabelField("Cherry (BonusA)", b.bonusACount + " × " + MapScoring.BonusAExtra + " = " + b.bonusAScore);
+        EditorGUILayout.LabelField("Apple (BonusB)", b.bonusBCount + " × " + MapScoring.BonusBExtra + " = " + b.bonusBScore);
         EditorGUILayout.LabelField("Bees", b.beeCount + " × " + MapScoring.BeePenalty + " = " + b.beePenalty);
         EditorGUILayout.LabelField("Walls required", (b.wallPositions != null ? b.wallPositions.Length : 0).ToString());
         if (b.wallPositions != null && b.wallPositions.Length > 0)
@@ -541,7 +541,8 @@ public class MapGeneratorWindow : EditorWindow
         try
         {
             // Keep editor responsive but allow a real exact search.
-            MapScoreSolver.TimeLimitMilliseconds = 15000;
+            // CP-SAT CLI usually finishes well under this; acts as hard cap.
+            MapScoreSolver.TimeLimitMilliseconds = 30000;
             _solution = MapScoreSolver.Solve(_map, _settings.wallBudget);
         }
         finally

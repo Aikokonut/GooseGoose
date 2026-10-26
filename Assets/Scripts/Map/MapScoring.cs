@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Canonical puzzle scoring. Solver and gameplay must use this only.
-/// Enclosed pen = reachable passable cells from horse when horse cannot escape.
-/// Per enclosed cell: +1. BonusA +5, BonusB +10, Bee -3 (extra). Horse cell: +1 only.
+/// Canonical puzzle scoring (enclose.horse rules).
+/// Enclosed pen = cells reachable from the horse when the horse cannot reach any edge.
+/// Per enclosed cell base +1. Cherry (BonusA) +3 extra. Golden apple (BonusB) +10 extra.
+/// Bee −5 extra. Totals: grass 1, cherry 4, apple 11, bee −4. Horse cell: +1 only.
 /// </summary>
 public struct MapScoreBreakdown
 {
@@ -25,9 +26,12 @@ public struct MapScoreBreakdown
 public static class MapScoring
 {
     public const int PointsPerEnclosedCell = 1;
-    public const int BonusAExtra = 5;
+    /// <summary>Cherry extra (tile total 4 = 1+3).</summary>
+    public const int BonusAExtra = 3;
+    /// <summary>Golden apple extra (tile total 11 = 1+10).</summary>
     public const int BonusBExtra = 10;
-    public const int BeePenalty = -3;
+    /// <summary>Bee extra (tile total −4 = 1−5).</summary>
+    public const int BeePenalty = -5;
 
     static readonly Vector2Int[] Dirs =
     {
@@ -37,14 +41,32 @@ public static class MapScoring
         new Vector2Int(-1, 0)
     };
 
+    /// <summary>
+    /// Walls may only be placed on ordinary grass (edge allowed). Bonuses, bees, portals,
+    /// water, and the horse cannot be walled — matches enclose.horse.
+    /// </summary>
     public static bool IsWallPlaceable(CellType t)
     {
-        return t == CellType.Grass || t == CellType.BonusA || t == CellType.BonusB;
+        return t == CellType.Grass;
     }
 
     public static bool CountsAsEnclosedCell(CellType t)
     {
         return t != CellType.Water && t != CellType.Wall;
+    }
+
+    /// <summary>Point weight of a terrain cell when enclosed (base + extra).</summary>
+    public static int CellWeight(CellType t, bool isHorseCell)
+    {
+        if (isHorseCell)
+            return PointsPerEnclosedCell;
+        if (!CountsAsEnclosedCell(t))
+            return 0;
+        int v = PointsPerEnclosedCell;
+        if (t == CellType.BonusA) v += BonusAExtra;
+        else if (t == CellType.BonusB) v += BonusBExtra;
+        else if (t == CellType.Bee) v += BeePenalty;
+        return v;
     }
 
     /// <summary>
@@ -106,27 +128,24 @@ public static class MapScoring
         int bonusA = 0;
         int bonusB = 0;
         int bees = 0;
+        int total = 0;
+        int horseIdx = map.Index(map.horse.x, map.horse.y);
 
         for (int i = 0; i < mask.Length; i++)
         {
             if (!mask[i])
                 continue;
 
-            CellType t = map.cells[i];
-            // Horse marker may overwrite underlying type; still count as enclosed cell.
-            if (map.Index(map.horse.x, map.horse.y) == i)
-                t = CellType.Horse;
-
+            bool isHorse = i == horseIdx;
+            CellType t = isHorse ? CellType.Horse : map.cells[i];
             if (!CountsAsEnclosedCell(t) && t != CellType.Horse)
                 continue;
 
             enclosed++;
-            if (t == CellType.BonusA)
-                bonusA++;
-            else if (t == CellType.BonusB)
-                bonusB++;
-            else if (t == CellType.Bee)
-                bees++;
+            total += CellWeight(t, isHorse);
+            if (t == CellType.BonusA) bonusA++;
+            else if (t == CellType.BonusB) bonusB++;
+            else if (t == CellType.Bee) bees++;
         }
 
         result.enclosedCellCount = enclosed;
@@ -136,10 +155,7 @@ public static class MapScoring
         result.bonusBScore = bonusB * BonusBExtra;
         result.beeCount = bees;
         result.beePenalty = bees * BeePenalty;
-        result.totalScore = enclosed * PointsPerEnclosedCell
-                            + result.bonusAScore
-                            + result.bonusBScore
-                            + result.beePenalty;
+        result.totalScore = total;
         result.valid = true;
         result.message = "OK";
         return result;
@@ -216,32 +232,20 @@ public static class MapScoring
         return mask;
     }
 
-    /// <summary>
-    /// Optimistic upper bound on score for a trapped pen (used for pruning).
-    /// Sums +1 and extras for every currently enclosed cell — same as Recalculate when trapped.
-    /// </summary>
     public static int ScoreFromMask(MapData map, bool[] mask)
     {
         if (mask == null)
             return int.MinValue;
 
         int total = 0;
+        int horseIdx = map.Index(map.horse.x, map.horse.y);
         for (int i = 0; i < mask.Length; i++)
         {
             if (!mask[i])
                 continue;
-            CellType t = map.cells[i];
-            if (map.Index(map.horse.x, map.horse.y) == i)
-                t = CellType.Horse;
-            if (!CountsAsEnclosedCell(t) && t != CellType.Horse)
-                continue;
-            total += PointsPerEnclosedCell;
-            if (t == CellType.BonusA)
-                total += BonusAExtra;
-            else if (t == CellType.BonusB)
-                total += BonusBExtra;
-            else if (t == CellType.Bee)
-                total += BeePenalty;
+            bool isHorse = i == horseIdx;
+            CellType t = isHorse ? CellType.Horse : map.cells[i];
+            total += CellWeight(t, isHorse);
         }
         return total;
     }

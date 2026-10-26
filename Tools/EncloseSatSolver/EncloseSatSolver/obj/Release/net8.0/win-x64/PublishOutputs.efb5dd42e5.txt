@@ -1,0 +1,17 @@
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\EncloseSatSolver.exe
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\EncloseSatSolver.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\EncloseSatSolver.deps.json
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\EncloseSatSolver.runtimeconfig.json
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\EncloseSatSolver.pdb
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\Google.OrTools.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\Google.Protobuf.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\abseil_dll.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\bz2.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\google-ortools-native.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\highs.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\libprotobuf.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\libscip.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\libutf8_validity.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\ortools.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\re2.dll
+D:\Project\GooseGoose\Tools\EncloseSatSolver\publish\zlib1.dll

@@ -5,8 +5,8 @@ using UnityEngine.InputSystem;
 
 /// <summary>
 /// Enclosure gameplay using the same passability / portal / escape rules as MapPathfinder.
-/// Click grass/bonus to place a wall (horse steps). Click an existing wall to remove it (refund, no horse step).
-/// When trapped, the horse's reachable pen is tinted yellow; opening a wall restores grass green.
+/// The horse stays put. Click grass/bonus to place a wall; click a wall to remove it (refund).
+/// Win when the horse can no longer reach the map edge.
 /// </summary>
 public class EnclosureGameController : MonoBehaviour
 {
@@ -121,14 +121,14 @@ public class EnclosureGameController : MonoBehaviour
         if (collectedBonus)
         {
             _wallsLeft++;
-            _status = "Bonus! +1 wall. Horse moves...";
+            _status = "Bonus! +1 wall.";
         }
         else
         {
-            _status = "Wall placed. Horse moves...";
+            _status = "Wall placed. Walls left: " + _wallsLeft;
         }
 
-        StepHorse();
+        EvaluateAfterEdit();
         RefreshEnclosureVisual();
     }
 
@@ -141,60 +141,27 @@ public class EnclosureGameController : MonoBehaviour
         _wallsLeft++;
         _status = "Wall removed (+1).";
 
-        // Opening a door: if horse can escape again, clear trapped state (no horse step).
         if (_escaped)
             return;
 
-        if (MapPathfinder.CanEscape(_map))
-        {
-            _trapped = false;
-            _status = "Door opened. Horse can escape again. Walls: " + _wallsLeft;
-        }
-        else
-        {
-            _trapped = true;
-            _status = "Still enclosed. Walls: " + _wallsLeft;
-        }
-
+        EvaluateAfterEdit();
         RefreshEnclosureVisual();
     }
 
-    void StepHorse()
+    void EvaluateAfterEdit()
     {
-        EscapePath path = MapPathfinder.FindEscape(_map);
-        if (!path.found || path.cells == null || path.cells.Count <= 1)
-        {
-            _trapped = true;
-            _status = "Enclosed! Horse is trapped. Click a wall to open a door.";
-            return;
-        }
-
-        Vector2Int next = path.cells[1];
-
-        RestoreCellAfterHorseLeaves(_map.horse);
-        _map.horse = next;
-
-        CellType landed = _map.Get(next);
-        if (landed == CellType.BonusA || landed == CellType.BonusB)
-        {
-            _wallsLeft++;
-            _map.Set(next, CellType.Grass);
-            _status = "Horse grabbed a bonus (+1 wall).";
-        }
-
-        _map.Set(_map.horse, CellType.Horse);
-
         if (_map.IsEdge(_map.horse))
         {
             _escaped = true;
             _trapped = false;
-            _status = "Horse escaped!";
+            _status = "Horse is on the boundary.";
             return;
         }
 
         if (!MapPathfinder.CanEscape(_map))
         {
             _trapped = true;
+            _escaped = false;
             _status = "Enclosed! Horse is trapped. Click a wall to open a door.";
             return;
         }
@@ -238,23 +205,5 @@ public class EnclosureGameController : MonoBehaviour
         }
         else
             _board.ClearEnclosedHighlight();
-    }
-
-    void RestoreCellAfterHorseLeaves(Vector2Int p)
-    {
-        if (_map.portals != null)
-        {
-            for (int i = 0; i < _map.portals.Length; i++)
-            {
-                if (_map.portals[i].a == p || _map.portals[i].b == p)
-                {
-                    _map.Set(p, CellType.Portal);
-                    return;
-                }
-            }
-        }
-
-        if (_map.Get(p) == CellType.Horse)
-            _map.Set(p, CellType.Grass);
     }
 }
